@@ -6,4 +6,4 @@ os/Cargo.lock
 tools/
 user/target/
 easy-fs-fuse/target/
-
+user/Cargo.lock
