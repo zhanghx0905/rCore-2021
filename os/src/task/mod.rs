@@ -15,7 +15,7 @@ use task::{TaskControlBlock, TaskStatus};
 pub use context::TaskContext;
 
 pub struct TaskManager {
-    num_app: usize,
+    // num_app: usize,
     inner: RefCell<TaskManagerInner>,
 }
 
@@ -44,7 +44,7 @@ lazy_static! {
             heap.push(Stride { stride: 0, pid: i });
         }
         TaskManager {
-            num_app,
+            // num_app,
             inner: RefCell::new(TaskManagerInner {
                 tasks,
                 current_task: 0,
