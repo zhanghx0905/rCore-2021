@@ -1,6 +1,12 @@
+use crate::loader::is_space_available;
+
 const FD_STDOUT: usize = 1;
 
 pub fn sys_write(fd: usize, buf: *const u8, len: usize) -> isize {
+    if !is_space_available(buf as usize, buf as usize + len) {
+        println!("[kernel] sys_write called on unavailable space: buf = {:#x}, len = {}", buf as usize, len);
+        return -1;
+    }
     match fd {
         FD_STDOUT => {
             let slice = unsafe { core::slice::from_raw_parts(buf, len) };
@@ -9,7 +15,8 @@ pub fn sys_write(fd: usize, buf: *const u8, len: usize) -> isize {
             len as isize
         },
         _ => {
-            panic!("Unsupported fd in sys_write!");
+            println!("Unsupported fd in sys_write!");
+            -1
         }
     }
 }

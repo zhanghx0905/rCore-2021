@@ -3,15 +3,10 @@ use crate::sbi::set_timer;
 use crate::config::CLOCK_FREQ;
 
 const TICKS_PER_SEC: usize = 100;
-const MSEC_PER_SEC: usize = 1000;       // ms
 const MICRO_PER_SEC: usize = 1_000_000; // us
 
 pub fn get_time() -> usize {
     time::read()
-}
-
-pub fn get_time_ms() -> usize {
-    time::read() / (CLOCK_FREQ / MSEC_PER_SEC)
 }
 
 pub fn get_time_us() -> usize {

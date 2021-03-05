@@ -165,3 +165,7 @@ pub fn exit_current_and_run_next() {
     mark_current_exited();
     run_next_task();
 }
+
+pub fn get_current_appid() -> usize {
+    TASK_MANAGER.inner.borrow().current_task
+}

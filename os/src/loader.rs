@@ -1,5 +1,5 @@
 use crate::trap::TrapContext;
-use crate::task::TaskContext;
+use crate::task::{TaskContext, get_current_appid};
 use crate::config::*;
 
 #[repr(align(4096))]
@@ -84,4 +84,18 @@ pub fn init_app_cx(app_id: usize) -> &'static TaskContext {
         TrapContext::app_init_context(get_base_i(app_id), USER_STACK[app_id].get_sp()),
         TaskContext::goto_restore(),
     )
+}
+
+/// return true if [start, end) is available for U mode
+pub fn is_space_available(start: usize, end: usize) -> bool {
+    let current = get_current_appid();
+    let user_stack = USER_STACK[current].get_sp();
+    let base = get_base_i(current);
+    if (start > user_stack - USER_STACK_SIZE && user_stack >= end)
+        || (start >= base && base + APP_SIZE_LIMIT >= end)
+    {
+        true
+    } else {
+        false
+    }
 }
