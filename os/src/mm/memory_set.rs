@@ -62,15 +62,9 @@ impl MemorySet {
         Ok(())
     }
     pub fn remove_framed_area(&mut self, start_va: VirtAddr, end_va: VirtAddr) -> Result<(), ()> {
-        let virt_range = VPNRange::new(start_va.floor(), end_va.ceil());
-        if let Some(idx) = self.areas
-            .iter()
-            .position(|area| area.vpn_range == virt_range) {
-            self.areas[idx].unmap(&mut self.page_table)?;
-            Ok(())
-        } else {
-            Err(())
-        }
+        MapArea::new(start_va, end_va, MapType::Framed, MapPermission::empty())
+            .unmap(&mut self.page_table)?;
+        Ok(())
     }
     
     fn push(&mut self, mut map_area: MapArea, data: Option<&[u8]>) -> Result<(), ()> {
