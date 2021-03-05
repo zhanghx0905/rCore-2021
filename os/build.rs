@@ -7,11 +7,11 @@ fn main() {
     insert_app_data().unwrap();
 }
 
-static TARGET_PATH: &str = "../user/build/bin";
+static TARGET_PATH: &str = "../user/build/bin/";
 
 fn insert_app_data() -> Result<()> {
-    let mut f = File::create("os/src/link_app.S").unwrap();
-    let mut apps: Vec<_> = read_dir("../user/src/bin")
+    let mut f = File::create("src/link_app.S").unwrap();
+    let mut apps: Vec<_> = read_dir("../user/build/bin/")
         .unwrap()
         .into_iter()
         .map(|dir_entry| {

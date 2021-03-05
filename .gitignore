@@ -1,9 +1,9 @@
 .idea/
 os/target/
-os/.idea/
 os/src/link_app.S
 os/Cargo.lock
 tools/
-user/target/
-easy-fs-fuse/target/
+user/target
+user/build
 user/Cargo.lock
+easy-fs-fuse/target/
