@@ -1,4 +1,4 @@
-use super::{frame_alloc, PhysPageNum, FrameTracker, VirtPageNum, VirtAddr, StepByOne};
+use super::{frame_alloc, PhysPageNum, FrameTracker, VirtPageNum, VirtAddr, StepByOne, PhysAddr};
 use alloc::vec::Vec;
 use alloc::vec;
 use bitflags::*;
@@ -130,12 +130,21 @@ impl PageTable {
         self.find_pte(vpn)
             .map(|pte| {pte.clone()})
     }
+    pub fn translate_va(&self, va: VirtAddr) -> Option<PhysAddr> {
+        self.find_pte(va.clone().floor())
+            .map(|pte| {
+                let aligned_pa: PhysAddr = pte.ppn().into();
+                let offset = va.page_offset();
+                let aligned_pa_usize: usize = aligned_pa.into();
+                (aligned_pa_usize + offset).into()
+            })
+    }
     pub fn token(&self) -> usize {
         8usize << 60 | self.root_ppn.0
     }
 }
 
-pub fn translated_byte_buffer(token: usize, ptr: *const u8, len: usize) -> Vec<&'static [u8]> {
+pub fn translated_byte_buffer(token: usize, ptr: *const u8, len: usize) -> Option<Vec<&'static [u8]>> {
     let page_table = PageTable::from_token(token);
     let mut start = ptr as usize;
     let end = start + len;
@@ -143,15 +152,22 @@ pub fn translated_byte_buffer(token: usize, ptr: *const u8, len: usize) -> Vec<&
     while start < end {
         let start_va = VirtAddr::from(start);
         let mut vpn = start_va.floor();
-        let ppn = page_table
-            .translate(vpn)
-            .unwrap()
-            .ppn();
+        let entry = page_table.translate(vpn);
+        let ppn = match entry {
+            Some(e) => e.ppn(),
+            None => return None,
+        };
         vpn.step();
         let mut end_va: VirtAddr = vpn.into();
         end_va = end_va.min(VirtAddr::from(end));
         v.push(&ppn.get_bytes_array()[start_va.page_offset()..end_va.page_offset()]);
         start = end_va.into();
     }
-    v
+    Some(v)
+}
+
+pub fn translated_refmut<T>(token: usize, ptr: *mut T) -> &'static mut T {
+    let page_table = PageTable::from_token(token);
+    let va = ptr as usize;
+    page_table.translate_va(VirtAddr::from(va)).unwrap().get_mut()
 }
