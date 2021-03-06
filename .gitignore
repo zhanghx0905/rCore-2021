@@ -5,5 +5,6 @@ os/src/link_app.S
 os/Cargo.lock
 tools/
 user/target/
+user/build
 easy-fs-fuse/target/
 user/Cargo.lock
