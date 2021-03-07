@@ -37,15 +37,25 @@ d    t0,24(t0)	# 即 0x80000000
 jr    t0
 ```
 
-再跳转到 `0x80000000` RustSBI 的 `start` 函数进一步[初始化](https://github.com/luojia65/rustsbi/blob/master/platform/qemu/src/main.rs#L93)。
+再跳转到 `0x80000000` RustSBI 的 `start` [函数](https://github.com/luojia65/rustsbi/blob/master/platform/qemu/src/main.rs#L93)。
 
-阅读 RustSBI 源代码，可知经过一系列资源初始化后，程序调整为 S 态，通过 `mret` 跳转到 `0x80200000` 进入 rCore.
+```flow
+s=>start: start
+o1=>operation: main
+o2=>operation: enter_privileged
+o3=>operation: s_mode_start
+e=>end: 0x80200000
+
+s->o1->o2->o3->e
+```
+在 `start` 函数和 `main` 函数中经过一系列资源初始化后，程序调整为 S 态，跳转到 `0x80200000` 进入 rCore.
 
 ```rust
 unsafe {
-	mepc::write(s_mode_start as usize);	// 0x80200000
+	mepc::write(s_mode_start as usize);
 	mstatus::set_mpp(MPP::Supervisor);
-	rustsbi::enter_privileged(mhartid::read(), dtb_pa)	// mret
+	rustsbi::enter_privileged(mhartid::read(), dtb_pa)	// mret 到 s_mode_start
+    // 此后在 s_mode_start 中跳转到 0x80200000
 }
 ```
 
