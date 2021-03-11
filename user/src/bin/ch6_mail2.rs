@@ -4,7 +4,7 @@
 #[macro_use]
 extern crate user_lib;
 
-use user_lib::{fork, mail_read, mail_write, sleep, wait, exit};
+use user_lib::{exit, fork, mail_read, mail_write, sleep, wait};
 
 const BUF_LEN: usize = 256;
 
@@ -46,7 +46,7 @@ fn main() -> i32 {
     assert_eq!(mail_write(pid as usize, &buffer), -1);
     println!("father wirte 1 mail fail");
     println!("father sleep 2s");
-    sleep(1500 as usize);
+    sleep(2000 as usize);
     assert_eq!(mail_write(pid as usize, &buffer), BUF_LEN as isize);
     println!("father wirte 1 mail succeed");
 
