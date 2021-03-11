@@ -21,6 +21,12 @@ static TESTS: &[&str] = &[
     "ch5_getpid\0",
     "ch5_spawn0\0",
     "ch5_spawn1\0",
+    "ch5_getpid\0",
+    "ch5_spawn0\0",
+    "ch5_spawn1\0",
+    "ch5_getpid\0",
+    "ch5_spawn0\0",
+    "ch5_spawn1\0",
 ];
 
 use user_lib::{spawn, waitpid};
