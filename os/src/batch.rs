@@ -50,9 +50,9 @@ unsafe impl Sync for AppManager {}
 
 impl AppManagerInner {
     pub fn print_app_info(&self) {
-        println!("[kernel] num_app = {}", self.num_app);
+        // println!("[kernel] num_app = {}", self.num_app);
         for i in 0..self.num_app {
-            println!("[kernel] app_{} [{:#x}, {:#x})", i, self.app_start[i], self.app_start[i + 1]);
+            // println!("[kernel] app_{} [{:#x}, {:#x})", i, self.app_start[i], self.app_start[i + 1]);
         }
     }
 
@@ -60,7 +60,7 @@ impl AppManagerInner {
         if app_id >= self.num_app {
             panic!("All applications completed!");
         }
-        println!("[kernel] Loading app_{}", app_id);
+        // println!("[kernel] Loading app_{}", app_id);
         // clear icache
         llvm_asm!("fence.i" :::: "volatile");
         // clear app area

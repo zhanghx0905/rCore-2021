@@ -29,8 +29,13 @@
    scause=0x2
    [kernel] IllegalInstruction in application, core dumped.
    ```
+3. 写非法地址 (Qemu 内部地址 `0x0`) `(0x0 as *mut u8).write_volatile(0)`
 
-较新版本的 `rustsbi` 在 Qemu 平台上支持非法指令的转发。出现这两种错误时，OS 的 `trap_handler` 捕获错误并打印错误信息，运行下一个用户程序。
+    ```bash
+    [kernel] PageFault in application, core dumped.
+    ```
+
+出现这几种错误时，OS 的 `trap_handler` 捕获错误并打印错误信息，运行下一个用户程序。
 
 #### 2.
 
@@ -90,10 +95,12 @@ riscv 支持的中断：
 
 ### 4.
 
+对于一些不可能/不需要恢复的情况, 如非法指令, 内存错误, 指令未对齐等, 保存现场不是必须的。 
 
+可以在进入 __alltraps 时先对 scause 做检查, 如果不需要保存现场，则可直接切换内核栈。
 
 ### 感想
 
 简答题太多了吧，不会做。
 
-编程作业代码量虽小，却需要对程序的运行过程有充分理解，并不简单。
+编程作业代码量虽小，却需要对程序的运行过程有充分理解。
