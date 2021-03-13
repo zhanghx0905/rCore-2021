@@ -19,7 +19,9 @@ mod config;
 mod task;
 mod timer;
 mod heap_alloc;
+mod logging;
 
+use log::info;
 global_asm!(include_str!("entry.asm"));
 global_asm!(include_str!("link_app.S"));
 
@@ -36,7 +38,8 @@ fn clear_bss() {
 #[no_mangle]
 pub fn rust_main() -> ! {
     clear_bss();
-    println!("[kernel] Hello, world!");
+    logging::init();
+    info!("[kernel] Hello, world!");
     heap_alloc::init_heap();
     trap::init();
     loader::load_apps();
