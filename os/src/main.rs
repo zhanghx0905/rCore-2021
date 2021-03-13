@@ -9,7 +9,7 @@ use log::info;
 #[macro_use]
 mod console;
 mod lang_items;
-mod logger;
+mod logging;
 mod sbi;
 
 global_asm!(include_str!("entry.asm"));
@@ -37,7 +37,7 @@ pub fn rust_main() -> ! {
         fn boot_stack_top();
     }
     clear_bss();
-    logger::init();
+    logging::init();
     println!("Hello, world!");
     info!(".text [{:#x}, {:#x})", stext as usize, etext as usize);
     info!(".rodata [{:#x}, {:#x})", srodata as usize, erodata as usize);
