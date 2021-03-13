@@ -1,9 +1,10 @@
 const FD_STDOUT: usize = 1;
 use crate::batch::is_space_available;
+use log::info;
 
 pub fn sys_write(fd: usize, buf: *const u8, len: usize) -> isize {
     if !is_space_available(buf as usize, buf as usize + len) {
-        // println!("[kernel] sys_write called on unavailable space: buf = {:#x}, len = {}", buf as usize, len);
+        info!("[kernel] sys_write called on unavailable space: buf = {:#x}, len = {}", buf as usize, len);
         return -1;
     }
     match fd {
@@ -14,7 +15,7 @@ pub fn sys_write(fd: usize, buf: *const u8, len: usize) -> isize {
             len as isize
         },
         _ => {
-            // println!("Unsupported fd in sys_write!");
+            info!("Unsupported fd in sys_write!");
             -1
         }
     }
