@@ -1,5 +1,5 @@
 cd ../user
 make clean
-make all CHAPTER=7
+make all
 cd ../os
 make run

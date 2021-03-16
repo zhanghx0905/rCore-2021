@@ -4,11 +4,8 @@
 #[macro_use]
 extern crate user_lib;
 
-use user_lib::getpid;
-
 #[no_mangle]
 pub fn main() -> i32 {
-    let pid = getpid();
-    println!("Test getpid OK! pid = {}", pid);
+    println!("Hello world from user mode program!");
     0
 }

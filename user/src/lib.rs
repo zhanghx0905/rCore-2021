@@ -166,11 +166,8 @@ pub fn getpid() -> isize {
 pub fn fork() -> isize {
     sys_fork()
 }
-
-pub fn exec(path: &str) -> isize {
-    sys_exec(path)
-}
-
+pub fn dup(fd: usize) -> isize { sys_dup(fd) }
+pub fn exec(path: &str, args: &[*const u8]) -> isize { sys_exec(path, args) }
 pub fn set_priority(prio: isize) -> isize {
     sys_set_priority(prio)
 }
@@ -207,7 +204,7 @@ pub fn sleep(period_ms: usize) {
         sys_yield();
     }
 }
-
+pub fn pipe(pipe_fd: &mut [usize]) -> isize { sys_pipe(pipe_fd) }
 pub fn mmap(start: usize, len: usize, prot: usize) -> isize {
     sys_mmap(start, len, prot)
 }
