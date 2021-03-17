@@ -9,13 +9,14 @@ pub mod console;
 mod lang_items;
 mod syscall;
 
-extern crate core;
+extern crate alloc;
 #[macro_use]
 extern crate bitflags;
 
 use buddy_system_allocator::LockedHeap;
 pub use console::{STDIN, STDOUT};
 use syscall::*;
+use alloc::vec::Vec;
 
 const USER_HEAP_SIZE: usize = 16384;
 
@@ -31,17 +32,31 @@ pub fn handle_alloc_error(layout: core::alloc::Layout) -> ! {
 
 #[no_mangle]
 #[link_section = ".text.entry"]
-pub extern "C" fn _start() -> ! {
+pub extern "C" fn _start(argc: usize, argv: usize) -> ! {
     unsafe {
         HEAP.lock()
             .init(HEAP_SPACE.as_ptr() as usize, USER_HEAP_SIZE);
     }
-    exit(main());
+    let mut v: Vec<&'static str> = Vec::new();
+    for i in 0..argc {
+        let str_start = unsafe {
+            ((argv + i * core::mem::size_of::<usize>()) as *const usize).read_volatile()
+        };
+        let len = (0usize..).find(|i| unsafe {
+            ((str_start + *i) as *const u8).read_volatile() == 0
+        }).unwrap();
+        v.push(
+            core::str::from_utf8(unsafe {
+                core::slice::from_raw_parts(str_start as *const u8, len)
+            }).unwrap()
+        );
+    }
+    exit(main(argc, v.as_slice()));
 }
 
 #[linkage = "weak"]
 #[no_mangle]
-fn main() -> i32 {
+fn main(_argc: usize, _argv: &[&str]) -> i32 {
     panic!("Cannot find main!");
 }
 
@@ -213,6 +228,6 @@ pub fn munmap(start: usize, len: usize) -> isize {
     sys_munmap(start, len)
 }
 
-pub fn spawn(path: &str) -> isize {
-    sys_spawn(path)
+pub fn spawn(path: &str, args: &[*const u8]) -> isize {
+    sys_spawn(path, args)
 }

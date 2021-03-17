@@ -93,75 +93,47 @@ pub fn sys_fork() -> isize {
     new_pid as isize
 }
 
-// TODO: 更改 testcases 的 start 接口使其能接收命令行参数
-// pub fn sys_exec(path: *const u8, mut args: *const usize) -> isize {
-//     let token = current_user_token();
-//     let path = translated_str(token, path);
-//     let mut args_vec: Vec<String> = Vec::new();
-//     loop {
-//         let arg_str_ptr = *translated_ref(token, args);
-//         if arg_str_ptr == 0 {
-//             break;
-//         }
-//         args_vec.push(translated_str(token, arg_str_ptr as *const u8));
-//         unsafe { args = args.add(1); }
-//     }
-//     if let Some(app_inode) = open_file(path.as_str(), OpenFlags::RDONLY) {
-//         let all_data = app_inode.read_all();
-//         let task = current_task().unwrap();
-//         let argc = args_vec.len();
-//         task.exec(all_data.as_slice(), args_vec);
-//         // return argc because cx.x[10] will be covered with it later
-//         argc as isize
-//     } else {
-//         -1
-//     }
-// }
 
-// pub fn sys_spawn(path: *const u8, mut args: *const usize) -> isize {
-//     let token = current_user_token();
-//     let path = translated_str(token, path);
-//     let mut args_vec: Vec<String> = Vec::new();
-//     loop {
-//         let arg_str_ptr = *translated_ref(token, args);
-//         if arg_str_ptr == 0 {
-//             break;
-//         }
-//         args_vec.push(translated_str(token, arg_str_ptr as *const u8));
-//         unsafe { args = args.add(1); }
-//     }
-//     if let Some(app_inode) = open_file(path.as_str(), OpenFlags::RDONLY) {
-//         let all_data = app_inode.read_all();
-//         let new_task = current_task().unwrap().fork();
-//         new_task.exec(all_data.as_slice(), args_vec);
-//         let new_pid = new_task.pid.0;
-//         add_task(new_task);
-//         new_pid as isize
-//     } else {
-//         -1
-//     }
-// }
-
-pub fn sys_exec(path: *const u8) -> isize {
+pub fn sys_exec(path: *const u8, mut args: *const usize) -> isize {
     let token = current_user_token();
     let path = translated_str(token, path);
+    let mut args_vec: Vec<String> = Vec::new();
+    loop {
+        let arg_str_ptr = *translated_ref(token, args);
+        if arg_str_ptr == 0 {
+            break;
+        }
+        args_vec.push(translated_str(token, arg_str_ptr as *const u8));
+        unsafe { args = args.add(1); }
+    }
     if let Some(app_inode) = open_file(path.as_str(), OpenFlags::RDONLY) {
         let all_data = app_inode.read_all();
         let task = current_task().unwrap();
-        task.exec(all_data.as_slice(), Vec::new());
+        let argc = args_vec.len();
+        task.exec(all_data.as_slice(), args_vec);
         // return argc because cx.x[10] will be covered with it later
-        0
+        argc as isize
     } else {
         -1
     }
 }
 
-pub fn sys_spawn(path: *const u8) -> isize {
-    let path = translated_str(current_user_token(), path);
+pub fn sys_spawn(path: *const u8, mut args: *const usize) -> isize {
+    let token = current_user_token();
+    let path = translated_str(token, path);
+    let mut args_vec: Vec<String> = Vec::new();
+    loop {
+        let arg_str_ptr = *translated_ref(token, args);
+        if arg_str_ptr == 0 {
+            break;
+        }
+        args_vec.push(translated_str(token, arg_str_ptr as *const u8));
+        unsafe { args = args.add(1); }
+    }
     if let Some(app_inode) = open_file(path.as_str(), OpenFlags::RDONLY) {
         let all_data = app_inode.read_all();
         let new_task = current_task().unwrap().fork();
-        new_task.exec(all_data.as_slice(), Vec::new());
+        new_task.exec(all_data.as_slice(), args_vec);
         let new_pid = new_task.pid.0;
         add_task(new_task);
         new_pid as isize

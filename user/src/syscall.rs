@@ -162,8 +162,8 @@ pub fn sys_munmap(start: usize, len: usize) -> isize {
     syscall(SYSCALL_MUNMAP, [start, len, 0])
 }
 
-pub fn sys_spawn(path: &str) -> isize {
-    syscall(SYSCALL_SPAWN, [path.as_ptr() as usize, 0, 0])
+pub fn sys_spawn(path: &str, args: &[*const u8]) -> isize {
+    syscall(SYSCALL_SPAWN, [path.as_ptr() as usize, args.as_ptr() as usize, 0])
 }
 
 pub fn sys_pipe(pipe: &mut [usize]) -> isize {
