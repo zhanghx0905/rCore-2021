@@ -78,7 +78,7 @@ pub fn exit_current_and_run_next(exit_code: i32) {
 
 lazy_static! {
     pub static ref INITPROC: Arc<TaskControlBlock> = Arc::new(
-        TaskControlBlock::new(get_app_data_by_name("ch5_initproc").unwrap())
+        TaskControlBlock::new(get_app_data_by_name("initproc").unwrap())
     );
 }
 
