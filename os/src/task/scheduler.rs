@@ -1,14 +1,24 @@
 use core::cmp::Ordering;
 
-#[derive(Eq, Ord, Debug)]
+#[derive(Eq, Debug)]
 pub struct Stride {
     pub stride: usize,
     pub pid: usize,
 }
 
+impl Ord for Stride {
+    fn cmp(&self, other: &Self) -> Ordering {
+        if self.stride == other.stride {
+            other.pid.cmp(&self.pid)
+        } else {
+            other.stride.cmp(&self.stride)
+        }
+    }
+}
+
 impl PartialOrd for Stride {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        other.stride.partial_cmp(&self.stride)
+        Some(self.cmp(&other))
     }
 }
 
