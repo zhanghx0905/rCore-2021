@@ -28,6 +28,16 @@
   cat file1 | getchar
   ```
 
+### 存在的问题
+
+已知存在如下功能实现不完整或不合理的问题：
+
+- lab4 `removed_framed_area`，没有操作 `Vec<MapArea>`，将在引入 `fork` 后带来问题。 
+- lab5 `spawn` 简单实现为 `fork+exec`，不高效。
+- 用 `transform_ref_mut` 为结构体赋值没有考虑跨页的情况。
+
+如果测例不改变就不修复了(没什么意思)，在此记录。
+
 ## References
 
 [rCore-Tutorial-Book 第三版](https://rcore-os.github.io/rCore-Tutorial-Book-v3/index.html)
