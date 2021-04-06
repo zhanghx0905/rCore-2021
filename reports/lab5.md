@@ -26,7 +26,7 @@
 
 #### 3
 
-假设 `spawn` 的接口为 `fn spawn(path: &str, args: &[*const u8]) -> isize`
+假设 `spawn` 的接口为 `fn spawn(path: &str, args: &[&str]) -> isize`
 
 重写后的伪代码如下：
 
@@ -34,15 +34,15 @@
 // a.rs
 fn main(argc: usize, argv: &[&str]) {
     let a = get_a();
-    spawn("b.rs", &[a.as_ptr()]);
+    spawn("b.rs", &[&a.to_string()]);
     println!("a = {}", a);
-    0
+    exit(0);
 }
 
 // b.rs
 fn main(argc: usize, argv: &[&str]) {
     assert!(argc == 1);
-    let a = argv[0].into();
+    let a = argv[0].parse().unwrap();
     let b = get_b();
     println!("a + b = {}", a + b);
     exit(0);
@@ -51,6 +51,41 @@ fn main(argc: usize, argv: &[&str]) {
 
 子程序 `b.rs` 的功能很简单，没有必要独立出来。`fork` 的存在提高了多进程编程的自由度，有利于编写更紧凑的程序。
 
+> 上述例子略作修改后可在 Ubuntu 上直接运行：
+>
+> ```rust
+> // a.rs
+> use std::process::Command;
+> 
+> fn main() {
+>     let a = 10;
+>     Command::new("./b")
+>         .arg(&a.to_string())
+>         .spawn()
+>         .expect("failed to spawn");
+>     println!("a = {}", a);
+> }
+> 
+> // b.rs
+> use std::env;
+> 
+> fn main() {
+>     let args: Vec<String> = env::args().collect();
+>     assert!(args.len() == 2);
+>     let a = args[1].parse::<i32>().unwrap();
+>     let b = 20;
+>     println!("a + b = {}", a + b);
+> }
+> 
+> ```
+>
+> 运行方式：
+>
+> ```sh
+> rustc b.rs -o b
+> rustc a.rs -o a
+> ./a
+> ```
 #### 4
 
 进程的状态大致分为：就绪、等待 、运行、退出 (包括 Zombie 态)
