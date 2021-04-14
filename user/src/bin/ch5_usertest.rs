@@ -12,7 +12,6 @@ static TESTS: &[&str] = &[
     "ch3_0_sleep\0",
     "ch3_0_sleep1\0",
     "ch4_mmap0\0",
-    "ch4_mmap0\0",
     "ch4_mmap1\0",
     "ch4_mmap2\0",
     "ch4_mmap3\0",
@@ -21,15 +20,11 @@ static TESTS: &[&str] = &[
     "ch5_getpid\0",
     "ch5_spawn0\0",
     "ch5_spawn1\0",
-    "ch5_getpid\0",
-    "ch5_spawn0\0",
-    "ch5_spawn1\0",
-    "ch5_getpid\0",
-    "ch5_spawn0\0",
-    "ch5_spawn1\0",
 ];
 
 use user_lib::{spawn, waitpid};
+
+/// 辅助测例，运行所有其他测例。
 
 #[no_mangle]
 pub fn main() -> i32 {
@@ -39,7 +34,10 @@ pub fn main() -> i32 {
         let mut xstate: i32 = Default::default();
         let wait_pid = waitpid(pid as usize, &mut xstate);
         assert_eq!(pid, wait_pid);
-        println!("\x1b[32mUsertests: Test {} in Process {} exited with code {}\x1b[0m", test, pid, xstate);
+        println!(
+            "\x1b[32mUsertests: Test {} in Process {} exited with code {}\x1b[0m",
+            test, pid, xstate
+        );
     }
     println!("ch5 Usertests passed!");
     0

@@ -3,14 +3,9 @@
 
 #[macro_use]
 extern crate user_lib;
-use user_lib::{
-    open,
-    close,
-    fstat,
-    OpenFlags,
-    Stat,
-    StatMode,
-};
+use user_lib::{close, fstat, open, OpenFlags, Stat, StatMode};
+
+/// 测试 fstat，输出　Test fstat OK! 就算正确。
 
 #[no_mangle]
 pub fn main() -> i32 {
@@ -24,6 +19,8 @@ pub fn main() -> i32 {
     assert_eq!(stat.mode, StatMode::FILE);
     assert_eq!(stat.nlink, 1);
     close(fd);
-    println!("TEST fstat OK!");
+    // unlink(fname);
+    // It's recommended to rebuild the disk image. This program will not clean the file "fname1".
+    println!("Test fstat OK!");
     0
 }
