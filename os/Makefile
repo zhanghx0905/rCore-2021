@@ -36,7 +36,7 @@ build: env $(KERNEL_BIN) $(FS_IMG)
 
 env:
 	(rustup target list | grep "riscv64gc-unknown-none-elf (installed)") || rustup target add $(TARGET)
-	cargo install cargo-binutils
+	cargo install cargo-binutils --vers ~0.2
 	rustup component add rust-src
 	rustup component add llvm-tools-preview
 
@@ -50,7 +50,7 @@ $(KERNEL_BIN): kernel
 
 $(FS_IMG): $(APPS)
 	@cd ../user && make build
-	@cd ../easy-fs-fuse && cargo run --release -- -s ../user/build/bin/ -t ../user/target/riscv64gc-unknown-none-elf/release/
+	@cd ../easy-fs-fuse && cargo run --release -- -s ../user/build/elf/ -t ../user/target/riscv64gc-unknown-none-elf/release/
 
 $(APPS):
 

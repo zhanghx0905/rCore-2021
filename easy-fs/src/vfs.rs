@@ -76,10 +76,11 @@ impl Inode {
     }
 
     pub fn find(&self, name: &str) -> Option<Arc<Inode>> {
-        let _ = self.fs.lock();
+        let _fs_lock = self.fs.lock();  // 这里不能命名为 _
         self.read_disk_inode(|disk_inode| {
             self.find_inode_id(name, disk_inode)
             .map(|inode_id| {
+                drop(_fs_lock);
                 Arc::new(Self::new(
                     inode_id,
                     self.fs.clone(),
@@ -153,7 +154,7 @@ impl Inode {
     }
 
     pub fn ls(&self) -> Vec<String> {
-        let _ = self.fs.lock();
+        let _fs_lock = self.fs.lock();
         self.read_disk_inode(|disk_inode| {
             let file_count = (disk_inode.size as usize) / DIRENT_SZ;
             let mut v: Vec<String> = Vec::new();
@@ -176,7 +177,7 @@ impl Inode {
     }
 
     pub fn read_at(&self, offset: usize, buf: &mut [u8]) -> usize {
-        let _ = self.fs.lock();
+        let _fs_lock = self.fs.lock();
         self.read_disk_inode(|disk_inode| {
             disk_inode.read_at(offset, buf, &self.block_device)
         })
@@ -227,7 +228,7 @@ impl Inode {
     
     /// dirty 的实现
     pub fn remove_hard_link(&self, name: &str) -> isize {
-        let _ = self.fs.lock();
+        let _fs_lock = self.fs.lock();
         let search_remove = |disk_inode: &mut DiskInode| {
             let file_count = (disk_inode.size as usize) / DIRENT_SZ;
             let mut dirent = DirEntry::empty();
@@ -248,7 +249,7 @@ impl Inode {
     }
     
     pub fn count_hard_links(&self, inode_id: u32) -> u32 {
-        let _ = self.fs.lock();
+        let _fs_lock = self.fs.lock();
         self.read_disk_inode(|disk_inode| {
             let mut cnt = 0;
             let file_count = (disk_inode.size as usize) / DIRENT_SZ;
