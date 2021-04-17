@@ -147,7 +147,6 @@ pub fn sys_waitpid(pid: isize, exit_code_ptr: *mut i32) -> isize {
             p.acquire_inner_lock().is_zombie() && (pid == -1 || pid as usize == p.getpid())
             // ++++ release child PCB lock
         });
-    // TODO: 修改为阻塞实现?
     if let Some((idx, _)) = pair {
         let child = inner.children.remove(idx);
         // confirm that child will be deallocated after removing from children list
