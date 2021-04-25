@@ -12,7 +12,6 @@ static TESTS: &[&str] = &[
     "ch3_0_sleep\0",
     "ch3_0_sleep1\0",
     "ch4_mmap0\0",
-    "ch4_mmap0\0",
     "ch4_mmap1\0",
     "ch4_mmap2\0",
     "ch4_mmap3\0",
@@ -21,15 +20,11 @@ static TESTS: &[&str] = &[
     "ch5_getpid\0",
     "ch5_spawn0\0",
     "ch5_spawn1\0",
-    "ch5_getpid\0",
-    "ch5_spawn0\0",
-    "ch5_spawn1\0",
-    "ch5_getpid\0",
-    "ch5_spawn0\0",
-    "ch5_spawn1\0",
 ];
 
 use user_lib::{spawn, waitpid};
+
+/// 辅助测例，运行所有其他测例。
 
 #[no_mangle]
 pub fn main() -> i32 {

@@ -4,6 +4,8 @@
 #[macro_use]
 extern crate user_lib;
 
+/// 辅助测例，运行所有其他测例。
+
 static TESTS: &[&str] = &[
     "ch2_hello_world\0",
     "ch2_power\0",
@@ -12,18 +14,11 @@ static TESTS: &[&str] = &[
     "ch3_0_sleep\0",
     "ch3_0_sleep1\0",
     "ch4_mmap0\0",
-    "ch4_mmap0\0",
     "ch4_mmap1\0",
     "ch4_mmap2\0",
     "ch4_mmap3\0",
     "ch4_unmap\0",
     "ch4_unmap2\0",
-    "ch5_getpid\0",
-    "ch5_spawn0\0",
-    "ch5_spawn1\0",
-    "ch5_getpid\0",
-    "ch5_spawn0\0",
-    "ch5_spawn1\0",
     "ch5_getpid\0",
     "ch5_spawn0\0",
     "ch5_spawn1\0",

@@ -10,12 +10,13 @@ PY := python3
 BUILD_SCRIPTS := build.py
 CH_TESTS := 
 CHAPTER ?= 
+HAVE_USERTESTS := 5 6 7
 
 CH2_TESTS := ch2_ ch2t_
 CH2_TESTS_BAD := _ch2_ _ch2t_
 CH3_TESTS_BASE := $(CH2_TESTS) ch3_0_ ch3t_
 CH4_TESTS := ch2_ ch3_0_ ch4_
-CH5_TESTS := $(CH4_TESTS) ch5_ initproc
+CH5_TESTS := $(CH4_TESTS) ch5_
 CH6_TESTS := $(CH5_TESTS) ch6_
 CH7_TESTS := $(CH6_TESTS) ch7_
 
@@ -72,6 +73,10 @@ all: binary pre
 	@$(foreach t, $(CH_TESTS), $(CP) $(TARGET_DIR)/$(t)*.bin $(BUILD_DIR)/bin/;)
 	@$(foreach t, $(CH_TESTS), $(CP) $(TARGET_DIR)/$(t)*.elf $(BUILD_DIR)/elf/;)
 	@$(foreach t, $(CH_TESTS), $(CP) $(TARGET_DIR)/$(t)*.asm $(BUILD_DIR)/asm/;)
+    ifneq ($(filter $(CHAPTER), $(HAVE_USERTESTS)),)
+		@cp $(BUILD_DIR)/elf/ch$(CHAPTER)_usertest.elf $(BUILD_DIR)/elf/initproc.elf
+		@cp $(TARGET_DIR)/ch$(CHAPTER)_usertest $(TARGET_DIR)/initproc
+    endif
 
 clean:
 	@cargo clean
