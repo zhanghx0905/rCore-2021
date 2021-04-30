@@ -1,13 +1,8 @@
-use crate::mm::{
-    UserBuffer,
-    translated_byte_buffer,
-    translated_refmut,
-    translated_str,
-};
-use crate::task::{current_user_token, current_task, get_task_by_pid};
-use crate::fs::{make_pipe, OpenFlags, open_file, Stat, create_hard_link, remove_hard_link};
+use crate::fs::{create_hard_link, make_pipe, open_file, remove_hard_link, OpenFlags, Stat};
+use crate::mm::{translated_byte_buffer, translated_refmut, translated_str, UserBuffer};
+use crate::task::{current_task, current_user_token, get_task_by_pid};
 use alloc::sync::Arc;
-
+use easy_fs::NAME_LENGTH_LIMIT;
 
 pub fn sys_write(fd: usize, buf: *const u8, len: usize) -> isize {
     let token = current_user_token();
@@ -59,11 +54,10 @@ pub fn sys_open(path: *const u8, flags: u32) -> isize {
     let task = current_task().unwrap();
     let token = current_user_token();
     let path = translated_str(token, path);
-    println!("path: {} flags: {}", path, flags);
-    if let Some(inode) = open_file(
-        path.as_str(),
-        OpenFlags::from_bits(flags).unwrap()
-    ) {
+    if path.len() > NAME_LENGTH_LIMIT {
+        return -1;
+    }
+    if let Some(inode) = open_file(path.as_str(), OpenFlags::from_bits(flags).unwrap()) {
         let mut inner = task.acquire_inner_lock();
         let fd = inner.alloc_fd();
         inner.fd_table[fd] = Some(inode);
@@ -163,9 +157,11 @@ pub fn sys_fstat(fd: usize, st: *mut Stat) -> isize {
     }
     match inner.fd_table[fd].as_ref().unwrap().get_stat() {
         Some(stat) => {
-            *translated_refmut(token, st) =stat;
-        },
-        None => {return -1;},
+            *translated_refmut(token, st) = stat;
+        }
+        None => {
+            return -1;
+        }
     };
     0
 }

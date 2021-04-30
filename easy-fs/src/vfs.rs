@@ -209,9 +209,11 @@ impl Inode {
             return -1;
         }
         let mut fs = self.fs.lock();
-        let inode_id = self
-            .read_disk_inode(|disk_inode| self.find_inode_id(old_name, disk_inode))
-            .unwrap();
+        let inode_id = match self
+            .read_disk_inode(|disk_inode| self.find_inode_id(old_name, disk_inode)) {
+                Some(id) => id,
+                None => return -1,
+            };
         self.modify_disk_inode(|root_inode| {
             let file_count = (root_inode.size as usize) / DIRENT_SZ;
             let new_size = (file_count + 1) * DIRENT_SZ;
