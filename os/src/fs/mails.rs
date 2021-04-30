@@ -4,7 +4,7 @@ use alloc::vec::Vec;
 
 const MAX_MAILS_NUM: usize = 16;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Mails(pub VecDeque<Vec<u8>>);
 
 impl Mails {

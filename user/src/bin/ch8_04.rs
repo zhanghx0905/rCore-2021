@@ -33,15 +33,15 @@ pub unsafe fn main() -> i32 {
     mail_write(100000, slice::from_raw_parts(0 as *const _, 53153));
     mail_write(133, &bug);
     mail_write(0, slice::from_raw_parts(0x1ff0 as *const _, 53153));
-    link("nonono", "yesyesyes");
-    link("fname0", "fname1");
-    link("fname1", "fname0");
-    link("fname0", "fname0");
-    link("\0", "fname1");
+    link("nonono\0", "yesyesyes\0");
+    link("fname0\0", "fname1\0");
+    link("fname1\0", "fname0\0");
+    link("fname0\0", "fname0\0");
+    link("\0", "fname1\0");
     let stat: *const Stat = 0 as *const _;
     ch8::raw_sys_fstat(0, stat);
     ch8::raw_sys_fstat(313, stat);
-    sys_unlinkat(555, "➑➑➑➑➑➑", 1);
-    sys_linkat(0, "QAQ", 7, "❆❆❆❆❆", 0);
+    sys_unlinkat(555, "➑➑➑➑➑➑\0", 1);
+    sys_linkat(0, "QAQ\0", 7, "❆❆❆❆❆\0", 0);
     0
 }

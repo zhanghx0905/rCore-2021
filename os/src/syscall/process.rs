@@ -81,7 +81,10 @@ pub fn sys_getpid() -> isize {
 
 pub fn sys_fork() -> isize {
     let current_task = current_task().unwrap();
-    let new_task = current_task.fork();
+    let new_task = match current_task.fork() {
+        Ok(task) => task,
+        Err(()) => return -1,
+    };
     let new_pid = new_task.pid.0;
     // modify trap context of new_task, because it returns immediately after switching
     let trap_cx = new_task.acquire_inner_lock().get_trap_cx();
@@ -93,7 +96,6 @@ pub fn sys_fork() -> isize {
     new_pid as isize
 }
 
-
 pub fn sys_exec(path: *const u8, mut args: *const usize) -> isize {
     let token = current_user_token();
     let path = translated_str(token, path);
@@ -104,7 +106,9 @@ pub fn sys_exec(path: *const u8, mut args: *const usize) -> isize {
             break;
         }
         args_vec.push(translated_str(token, arg_str_ptr as *const u8));
-        unsafe { args = args.add(1); }
+        unsafe {
+            args = args.add(1);
+        }
     }
     if let Some(app_inode) = open_file(path.as_str(), OpenFlags::RDONLY) {
         let all_data = app_inode.read_all();
@@ -128,11 +132,13 @@ pub fn sys_spawn(path: *const u8, mut args: *const usize) -> isize {
             break;
         }
         args_vec.push(translated_str(token, arg_str_ptr as *const u8));
-        unsafe { args = args.add(1); }
+        unsafe {
+            args = args.add(1);
+        }
     }
     if let Some(app_inode) = open_file(path.as_str(), OpenFlags::RDONLY) {
         let all_data = app_inode.read_all();
-        let new_task = current_task().unwrap().fork();
+        let new_task = current_task().unwrap().fork().unwrap();
         new_task.exec(all_data.as_slice(), args_vec);
         let new_pid = new_task.pid.0;
         add_task(new_task);

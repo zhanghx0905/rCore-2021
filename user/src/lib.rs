@@ -14,10 +14,10 @@ extern crate alloc;
 #[macro_use]
 extern crate bitflags;
 
-use buddy_system_allocator::LockedHeap;
-pub use console::{STDIN, STDOUT};
-pub use syscall::*;
 use alloc::vec::Vec;
+use buddy_system_allocator::LockedHeap;
+pub use console::{flush, STDIN, STDOUT};
+pub use syscall::*;
 
 const USER_HEAP_SIZE: usize = 16384;
 
@@ -40,16 +40,16 @@ pub extern "C" fn _start(argc: usize, argv: usize) -> ! {
     }
     let mut v: Vec<&'static str> = Vec::new();
     for i in 0..argc {
-        let str_start = unsafe {
-            ((argv + i * core::mem::size_of::<usize>()) as *const usize).read_volatile()
-        };
-        let len = (0usize..).find(|i| unsafe {
-            ((str_start + *i) as *const u8).read_volatile() == 0
-        }).unwrap();
+        let str_start =
+            unsafe { ((argv + i * core::mem::size_of::<usize>()) as *const usize).read_volatile() };
+        let len = (0usize..)
+            .find(|i| unsafe { ((str_start + *i) as *const u8).read_volatile() == 0 })
+            .unwrap();
         v.push(
             core::str::from_utf8(unsafe {
                 core::slice::from_raw_parts(str_start as *const u8, len)
-            }).unwrap()
+            })
+            .unwrap(),
         );
     }
     exit(main(argc, v.as_slice()));
@@ -128,6 +128,9 @@ pub fn open(path: &str, flags: OpenFlags) -> isize {
 }
 
 pub fn close(fd: usize) -> isize {
+    if fd == STDOUT {
+        console::flush();
+    }
     sys_close(fd)
 }
 
@@ -182,8 +185,12 @@ pub fn getpid() -> isize {
 pub fn fork() -> isize {
     sys_fork()
 }
-pub fn dup(fd: usize) -> isize { sys_dup(fd) }
-pub fn exec(path: &str, args: &[*const u8]) -> isize { sys_exec(path, args) }
+pub fn dup(fd: usize) -> isize {
+    sys_dup(fd)
+}
+pub fn exec(path: &str, args: &[*const u8]) -> isize {
+    sys_exec(path, args)
+}
 pub fn set_priority(prio: isize) -> isize {
     sys_set_priority(prio)
 }
@@ -220,7 +227,9 @@ pub fn sleep(period_ms: usize) {
         sys_yield();
     }
 }
-pub fn pipe(pipe_fd: &mut [usize]) -> isize { sys_pipe(pipe_fd) }
+pub fn pipe(pipe_fd: &mut [usize]) -> isize {
+    sys_pipe(pipe_fd)
+}
 pub fn mmap(start: usize, len: usize, prot: usize) -> isize {
     sys_mmap(start, len, prot)
 }

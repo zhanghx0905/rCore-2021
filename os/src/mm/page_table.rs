@@ -69,12 +69,15 @@ pub struct PageTable {
 
 /// Assume that it won't oom when creating/mapping.
 impl PageTable {
-    pub fn new() -> Self {
-        let frame = frame_alloc().unwrap();
-        PageTable {
+    pub fn new() -> Result<Self, ()> {
+        let frame = match frame_alloc() {
+            Some(f) => f,
+            None => return Err(()),
+        };
+        Ok(PageTable {
             root_ppn: frame.ppn,
             frames: vec![frame],
-        }
+        })
     }
     /// Temporarily used to get arguments from user space.
     pub fn from_token(satp: usize) -> Self {
@@ -94,7 +97,10 @@ impl PageTable {
                 break;
             }
             if !pte.is_valid() {
-                let frame = frame_alloc().unwrap();
+                let frame = match frame_alloc() {
+                    Some(frame) => frame,
+                    None => return None,
+                };
                 *pte = PageTableEntry::new(frame.ppn, PTEFlags::V);
                 self.frames.push(frame);
             }
@@ -120,14 +126,20 @@ impl PageTable {
         result
     }
     pub fn map(&mut self, vpn: VirtPageNum, ppn: PhysPageNum, flags: PTEFlags) -> Result<(), ()> {
-        let pte = self.find_pte_create(vpn).unwrap();
+        let pte = match self.find_pte_create(vpn) {
+            Some(pte) => pte,
+            None => return Err(()),
+        };
         // assert!(!pte.is_valid(), "vpn {:?} is mapped before mapping", vpn);
         if pte.is_valid() { return Err(()); }
         *pte = PageTableEntry::new(ppn, flags | PTEFlags::V);
         Ok(())
     }
     pub fn unmap(&mut self, vpn: VirtPageNum) -> Result<(), ()> {
-        let pte = self.find_pte_create(vpn).unwrap();
+        let pte = match self.find_pte_create(vpn) {
+            Some(pte) => pte,
+            None => return Err(()),
+        };
         // assert!(pte.is_valid(), "vpn {:?} is invalid before unmapping", vpn);
         if !pte.is_valid() { return Err(()); }
         *pte = PageTableEntry::empty();

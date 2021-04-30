@@ -1,7 +1,6 @@
 #![no_std]
 #![no_main]
 
-#[macro_use]
 extern crate user_lib;
 use user_lib::ch8::hash;
 use user_lib::{open, unlink, OpenFlags};
@@ -21,7 +20,8 @@ fn file_test0(idx: usize) {
 
 const NUM: usize = 65536;
 
-fn main() {
+#[no_mangle]
+pub fn main() {
     for idx in 0..NUM {
         file_test0(idx);
     }

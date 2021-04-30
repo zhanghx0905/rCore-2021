@@ -46,11 +46,12 @@ pub struct MemorySet {
 }
 
 impl MemorySet {
-    pub fn new_bare() -> Self {
-        Self {
-            page_table: PageTable::new(),
+    pub fn new_bare() -> Result<Self, ()> {
+        let pt = PageTable::new()?;
+        Ok(Self {
+            page_table: pt,
             areas: Vec::new(),
-        }
+        })
     }
     pub fn token(&self) -> usize {
         self.page_table.token()
@@ -87,18 +88,19 @@ impl MemorySet {
         Ok(())
     }
     /// Mention that trampoline is not collected by areas.
-    fn map_trampoline(&mut self) {
+    fn map_trampoline(&mut self) -> Result<(), ()> {
         self.page_table.map(
             VirtAddr::from(TRAMPOLINE).into(),
             PhysAddr::from(strampoline as usize).into(),
             PTEFlags::R | PTEFlags::X,
-        ).unwrap();
+        )?;
+        Ok(())
     }
     /// Without kernel stacks.
     pub fn new_kernel() -> Self {
-        let mut memory_set = Self::new_bare();
+        let mut memory_set = Self::new_bare().unwrap();
         // map trampoline
-        memory_set.map_trampoline();
+        memory_set.map_trampoline().unwrap();
         // map kernel sections
         println!(".text [{:#x}, {:#x})", stext as usize, etext as usize);
         println!(".rodata [{:#x}, {:#x})", srodata as usize, erodata as usize);
@@ -153,9 +155,9 @@ impl MemorySet {
     /// Include sections in elf and trampoline and TrapContext and user stack,
     /// also returns user_sp and entry point.
     pub fn from_elf(elf_data: &[u8]) -> (Self, usize, usize) {
-        let mut memory_set = Self::new_bare();
+        let mut memory_set = Self::new_bare().unwrap();
         // map trampoline
-        memory_set.map_trampoline();
+        memory_set.map_trampoline().unwrap();
         // map program headers of elf, with U flag
         let elf = xmas_elf::ElfFile::new(elf_data).unwrap();
         let elf_header = elf.header;
@@ -207,14 +209,14 @@ impl MemorySet {
         ), None).unwrap();
         (memory_set, user_stack_top, elf.header.pt2.entry_point() as usize)
     }
-    pub fn from_existed_user(user_space: &MemorySet) -> MemorySet {
-        let mut memory_set = Self::new_bare();
+    pub fn from_existed_user(user_space: &MemorySet) -> Result<MemorySet, ()> {
+        let mut memory_set = Self::new_bare()?;
         // map trampoline
-        memory_set.map_trampoline();
+        memory_set.map_trampoline()?;
         // copy data sections/trap_context/user_stack
         for area in user_space.areas.iter() {
             let new_area = MapArea::from_another(area);
-            memory_set.push(new_area, None).unwrap();
+            memory_set.push(new_area, None)?;
             // copy data from another space
             for vpn in area.vpn_range {
                 let src_ppn = user_space.translate(vpn).unwrap().ppn();
@@ -222,7 +224,7 @@ impl MemorySet {
                 dst_ppn.get_bytes_array().copy_from_slice(src_ppn.get_bytes_array());
             }
         }
-        memory_set
+        Ok(memory_set)
     }
     pub fn activate(&self) {
         let satp = self.page_table.token();

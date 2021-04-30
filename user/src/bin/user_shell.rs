@@ -13,7 +13,7 @@ const BS: u8 = 0x08u8;
 
 use alloc::string::String;
 use alloc::vec::Vec;
-use user_lib::console::getchar;
+use user_lib::console::{flush, getchar};
 use user_lib::{close, dup, exec, fork, open, pipe, waitpid, OpenFlags, STDIN, STDOUT};
 
 #[derive(Debug, Clone)]
@@ -43,6 +43,7 @@ pub fn main() -> i32 {
     println!("Rust user shell");
     let mut line: String = String::new();
     print!(">> ");
+    flush();
     loop {
         let c = getchar();
         match c {
@@ -173,17 +174,20 @@ pub fn main() -> i32 {
                     }
                 }
                 print!(">> ");
+                flush();
             }
             BS | DL => {
                 if !line.is_empty() {
                     print!("{}", BS as char);
                     print!(" ");
                     print!("{}", BS as char);
+                    flush();
                     line.pop();
                 }
             }
             _ => {
                 print!("{}", c as char);
+                flush();
                 line.push(c as char);
             }
         }

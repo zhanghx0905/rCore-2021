@@ -1,21 +1,15 @@
-use crate::mm::{
-    MemorySet,
-    PhysPageNum,
-    KERNEL_SPACE, 
-    VirtAddr,
-    translated_refmut,
-};
-use crate::trap::{TrapContext, trap_handler};
-use crate::config::{TRAP_CONTEXT};
 use super::TaskContext;
-use super::{PidHandle, pid_alloc, KernelStack};
-use alloc::sync::{Weak, Arc};
+use super::{pid_alloc, KernelStack, PidHandle};
+use crate::config::TRAP_CONTEXT;
+use crate::fs::{File, Mails, Stdin, Stdout};
+use crate::mm::{translated_refmut, MemorySet, PhysPageNum, VirtAddr, KERNEL_SPACE};
+use crate::trap::{trap_handler, TrapContext};
+use alloc::collections::VecDeque;
+use alloc::string::String;
+use alloc::sync::{Arc, Weak};
 use alloc::vec;
 use alloc::vec::Vec;
-use alloc::string::String;
-use alloc::collections::VecDeque;
 use spin::{Mutex, MutexGuard};
-use crate::fs::{File, Stdin, Stdout, Mails};
 
 pub struct TaskControlBlock {
     // immutable
@@ -55,8 +49,7 @@ impl TaskControlBlockInner {
         self.get_status() == TaskStatus::Zombie
     }
     pub fn alloc_fd(&mut self) -> usize {
-        if let Some(fd) = (0..self.fd_table.len())
-            .find(|fd| self.fd_table[*fd].is_none()) {
+        if let Some(fd) = (0..self.fd_table.len()).find(|fd| self.fd_table[*fd].is_none()) {
             fd
         } else {
             self.fd_table.push(None);
@@ -78,7 +71,7 @@ impl TaskControlBlock {
             .ppn();
         // alloc a pid and a kernel stack in kernel space
         let pid_handle = pid_alloc();
-        let kernel_stack = KernelStack::new(&pid_handle);
+        let kernel_stack = KernelStack::new(&pid_handle).unwrap();
         let kernel_stack_top = kernel_stack.get_top();
         // push a task context which goes to trap_return to the top of kernel stack
         let task_cx_ptr = kernel_stack.push_on_top(TaskContext::goto_trap_return());
@@ -130,7 +123,7 @@ impl TaskControlBlock {
             .map(|arg| {
                 translated_refmut(
                     memory_set.token(),
-                    (argv_base + arg * core::mem::size_of::<usize>()) as *mut usize
+                    (argv_base + arg * core::mem::size_of::<usize>()) as *mut usize,
                 )
             })
             .collect();
@@ -167,20 +160,18 @@ impl TaskControlBlock {
         *inner.get_trap_cx() = trap_cx;
         // **** release current PCB lock
     }
-    pub fn fork(self: &Arc<TaskControlBlock>) -> Arc<TaskControlBlock> {
+    pub fn fork(self: &Arc<TaskControlBlock>) -> Result<Arc<TaskControlBlock>, ()> {
         // ---- hold parent PCB lock
         let mut parent_inner = self.acquire_inner_lock();
         // copy user space(include trap context)
-        let memory_set = MemorySet::from_existed_user(
-            &parent_inner.memory_set
-        );
+        let memory_set = MemorySet::from_existed_user(&parent_inner.memory_set)?;
         let trap_cx_ppn = memory_set
             .translate(VirtAddr::from(TRAP_CONTEXT).into())
             .unwrap()
             .ppn();
         // alloc a pid and a kernel stack in kernel space
         let pid_handle = pid_alloc();
-        let kernel_stack = KernelStack::new(&pid_handle);
+        let kernel_stack = KernelStack::new(&pid_handle)?;
         let kernel_stack_top = kernel_stack.get_top();
         // push a goto_trap_return task_cx on the top of kernel stack
         let task_cx_ptr = kernel_stack.push_on_top(TaskContext::goto_trap_return());
@@ -192,10 +183,6 @@ impl TaskControlBlock {
             } else {
                 new_fd_table.push(None);
             }
-        }
-        let mut new_mails = VecDeque::new();
-        for mail in parent_inner.mails.0.iter() {
-            new_mails.push_back(mail.clone());
         }
         let task_control_block = Arc::new(TaskControlBlock {
             pid: pid_handle,
@@ -210,7 +197,7 @@ impl TaskControlBlock {
                 children: Vec::new(),
                 exit_code: 0,
                 fd_table: new_fd_table,
-                mails: Mails(new_mails),
+                mails: parent_inner.mails.clone(),
             }),
         });
         // add child
@@ -221,13 +208,12 @@ impl TaskControlBlock {
         // **** release child PCB lock
         trap_cx.kernel_sp = kernel_stack_top;
         // return
-        task_control_block
+        Ok(task_control_block)
         // ---- release parent PCB lock
     }
     pub fn getpid(&self) -> usize {
         self.pid.0
     }
-
 }
 
 #[derive(Copy, Clone, PartialEq)]
